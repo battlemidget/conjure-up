@@ -61,4 +61,5 @@ target/
 debian/conjure*debhelper
 debian/conjure*substvars
 debian/conjure-up/*
+debian/conjure-craft/*
 debian/files

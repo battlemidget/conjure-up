@@ -1,0 +1,9 @@
+~ conjure-craft
+
+Crafting packages for conjure-up
+
+~ usage
+
+$ conjure-craft kubernetes
+$ conjure-craft lint kubernetes
+$ conjure-craft package kubernetes
