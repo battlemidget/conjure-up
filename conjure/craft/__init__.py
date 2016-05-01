@@ -5,13 +5,30 @@ import argparse
 import sys
 import os
 from conjure.shell import shell
+from conjure import async
+from ubuntui.ev import EventLoop
+from ubuntui.palette import STYLES
+from conjure.ui import ConjureUI
 from conjure import __version__ as VERSION
+from conjure.log import setup_logging
 
 
 class CraftException(Exception):
     """ Error in crafting
     """
     pass
+
+
+class CraftConfig:
+    """ Craft configuration persisted throughout the entire
+    life of the application """
+
+    def __init__(self, argv):
+        self.ui = ConjureUI()
+        self.argv = argv
+        self.env = os.environ.copy()
+        self.log = setup_logging('conjure-craft',
+                                 self.argv.debug)
 
 
 class Craft:
@@ -21,6 +38,8 @@ class Craft:
         Arguments:
         opts: Options passed in from cli
         """
+        self.app = CraftConfig(opts)
+
         if os.path.isdir(opts.spell):
             raise CraftException(
                 "{} directory exists, please specify another.".format(
@@ -28,6 +47,23 @@ class Craft:
             )
 
         shell('mkdir -p {}'.format(opts.directory))
+
+    def unhandled_input(self, key):
+        if key in ['q', 'Q']:
+            async.shutdown()
+            EventLoop.exit(0)
+
+
+    def _start(self, *args, **kwargs):
+        self.app.log.info("conjure-craft starting")
+        async.shutdown()
+        EventLoop.exit(0)
+
+    def start(self):
+        EventLoop.build_loop(self.app.ui, STYLES,
+                             unhandled_input=self.unhandled_input)
+        EventLoop.set_alarm_in(0.05, self._start)
+        EventLoop.run()
 
 
 def parse_options(argv):
