@@ -1,0 +1,4 @@
+{{spell}}-rsyslog.conf usr/share/{{spell}}
+config.json usr/share/{{spell}}
+metadata.json usr/share/{{spell}}
+bundles usr/share/{{spell}}

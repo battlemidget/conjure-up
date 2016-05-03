@@ -63,6 +63,7 @@ Depends: python3-bson,
          python3-urwid,
          python3-ws4py,
          python3-yaml,
+         build-essential,
          ${misc:Depends},
          ${python3:Depends},
          ${shlibs:Depends}

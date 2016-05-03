@@ -120,6 +120,10 @@ def pollinate(session, tag, log):
         XA - pre processing started
         XB - post processing started
 
+        C001 - craft welcome
+        C002 - craft finished input
+        C009 - craft cancelled
+
         UC - user cancelled
         EC - error getting credentials
         EP - error in placement/bundle editor

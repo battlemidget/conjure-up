@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+if [ ! -f /var/log/{{spell}}.log ]; then
+        touch /var/log/{{spell}}.log
+fi
+chown syslog:syslog /var/log/{{spell}}.log
+
+ln -sf /usr/share/{{spell}}/{{spell}}-rsyslog.conf /etc/rsyslog.d/99-{{spell}}.conf
+
+invoke-rc.d rsyslog restart
+
+#DEBHELPER#

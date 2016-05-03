@@ -4,6 +4,7 @@
 import argparse
 import sys
 import os
+import uuid
 from conjure.shell import shell
 from conjure import async
 from ubuntui.ev import EventLoop
@@ -11,7 +12,7 @@ from ubuntui.palette import STYLES
 from conjure.ui import ConjureUI
 from conjure import __version__ as VERSION
 from conjure.log import setup_logging
-
+from conjure.craft.controllers.welcome import WelcomeController
 
 class CraftException(Exception):
     """ Error in crafting
@@ -29,6 +30,11 @@ class CraftConfig:
         self.env = os.environ.copy()
         self.log = setup_logging('conjure-craft',
                                  self.argv.debug)
+        self.spell = None
+        self.controllers = None
+        # Global session id
+        self.session_id = os.getenv('CONJURE_TEST_SESSION_ID',
+                                    str(uuid.uuid4()))
 
 
 class Craft:
@@ -39,25 +45,18 @@ class Craft:
         opts: Options passed in from cli
         """
         self.app = CraftConfig(opts)
-
-        if os.path.isdir(opts.spell):
-            raise CraftException(
-                "{} directory exists, please specify another.".format(
-                    opts.spell)
-            )
-
-        shell('mkdir -p {}'.format(opts.directory))
+        self.app.controllers = {
+            'welcome': WelcomeController(self.app)
+        }
 
     def unhandled_input(self, key):
         if key in ['q', 'Q']:
             async.shutdown()
             EventLoop.exit(0)
 
-
     def _start(self, *args, **kwargs):
         self.app.log.info("conjure-craft starting")
-        async.shutdown()
-        EventLoop.exit(0)
+        self.app.controllers['welcome'].render()
 
     def start(self):
         EventLoop.build_loop(self.app.ui, STYLES,
@@ -69,7 +68,7 @@ class Craft:
 def parse_options(argv):
     parser = argparse.ArgumentParser(description="Conjure craft",
                                      prog="conjure-craft")
-    parser.add_argument('spell', help='Name of Juju solution to create')
+    parser.add_argument('bundle', help='Bundle file to package')
     parser.add_argument('-d', '--debug', action='store_true',
                         dest='debug',
                         help='Enable debug logging.')
@@ -81,14 +80,14 @@ def parse_options(argv):
 def main():
     opts = parse_options(sys.argv[1:])
 
-    if not opts.spell:
+    if not opts.bundle:
         raise CraftException(
-            "A solution name is required."
+            "A bundle is required."
         )
 
     try:
-        Craft(opts)
-        sys.exit(0)
+        app = Craft(opts)
+        sys.exit(app.start())
     except CraftException as e:
         print(e)
         sys.exit(1)

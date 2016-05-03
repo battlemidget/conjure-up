@@ -1,0 +1,19 @@
+Source: {{spell}}
+Section: admin
+Priority: extra
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: debhelper (>= 9), conjure-up
+Standards-Version: 3.9.7
+Homepage: {{homepage}}
+Vcs-Browser: {{vcs}}
+Vcs-Git: {{vcs}}
+
+Package: {{spell}}
+Architecture: all
+Depends: conjure-up, ${misc:Depends}
+Description: Change me: Please update the summary
+ Needs a Description.
+ .
+ Seperate paragraphs with a '.'
+ .
+ Keep the description indented 1 character.

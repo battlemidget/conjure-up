@@ -65,6 +65,7 @@
   * `recommendedCharms`: **optional** A list of of recommended charms that would be useful for the bundle.
   * `additionalQuestions`: **optional** List of additional questions a bundle would require for deployment.
   * `bootstrapSeries`: **optional** Distro series of bootstrap controller
+  * `location`: **optional** Charmstore URL or local filepath of the bundle location
 
 ## Additional Questions
 
