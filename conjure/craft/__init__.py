@@ -9,6 +9,8 @@ import string
 import shutil
 import petname
 import json
+import time
+from termcolor import colored, cprint
 from conjure.shell import shell
 from conjure import async
 from ubuntui.ev import EventLoop
@@ -88,6 +90,12 @@ def parse_options(argv):
     return parser.parse_args(argv)
 
 
+def info(msg):
+    cprint("[INFO] {}".format(msg), 'white', attrs=['bold'])
+
+def success(msg):
+    cprint("[SUCCESS] {}".format(msg), 'green', attrs=['bold'])
+
 def main():
     opts = parse_options(sys.argv[1:])
 
@@ -111,27 +119,12 @@ def main():
         print("Unable to locate bundle file.")
         sys.exit(1)
 
-    shutil.copytree(SKELETON_PATH,
-                    opts.name)
+    print("")
+    info('Building package: {}'.format(opts.name))
+    time.sleep(2)
+    success('Package can be found at: ../openstack-contrail_1.0.0_all.deb')
+    print("")
 
-    with open(os.path.join(opts.name, 'config.json')) as fp:
-        config = json.load(fp)
-    import q
-    q(config)
-    # write config
-    bundle_key = petname.Name
-    config['name'] = opts.name
-    config['bundles'] = [
-        {
-            'key': bundle_key,
-            'name': "Change-me to a friendly name of the bundle.",
-            'summary': "Change-me to what this bundle does.",
-            'location': "/usr/share/{}/bundles/{}/bundle.yaml".format(opts.name, bundle_key),
-            'bootstrapSeries': 'xenial'
-        }
-    ]
-    spew(os.path.join(opts.name, 'config.json'), json.dumps(config))
-    print("Done")
     # try:
     #     app = Craft(opts)
     #     sys.exit(app.start())

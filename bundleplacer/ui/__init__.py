@@ -251,7 +251,9 @@ class PlacementView(WidgetWrap):
         simple_widgets = self._simple_header_widgets("Options Editor")
         fb = FilterBox(options_column.handle_filter_change,
                        info_text="Filter by option name")
-        return Pile(simple_widgets + [fb])
+        padded_fb = Padding(AttrMap(fb, 'filter', 'filter_focus'),
+                            left=2, right=2)
+        return Pile(simple_widgets + [padded_fb])
 
     def build_widgets(self):
 
@@ -356,9 +358,11 @@ class PlacementView(WidgetWrap):
 
         unplaced = self.placement_controller.unassigned_undeployed_services()
         all = self.placement_controller.services()
-        n_subs = len([c for c in all if c.subordinate])
-        n_total = len(all) - n_subs
-        remaining = len(unplaced) - n_subs
+        n_subs_in_unplaced = len([c for c in unplaced if c.subordinate])
+        n_subs_in_all = len([c for c in all if c.subordinate])
+
+        n_total = len(all) - n_subs_in_all
+        remaining = len(unplaced) - n_subs_in_unplaced
         if remaining > 0:
             dmsg = "\nAuto-assigning {}/{} services".format(remaining,
                                                             n_total)
