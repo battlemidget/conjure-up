@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import uuid
+import string
 from conjure.shell import shell
 from conjure import async
 from ubuntui.ev import EventLoop
@@ -30,7 +31,9 @@ class CraftConfig:
         self.env = os.environ.copy()
         self.log = setup_logging('conjure-craft',
                                  self.argv.debug)
-        self.spell = None
+        self.package = argv.name
+        self.bundle = argv.bundle
+
         self.controllers = None
         # Global session id
         self.session_id = os.getenv('CONJURE_TEST_SESSION_ID',
@@ -68,6 +71,7 @@ class Craft:
 def parse_options(argv):
     parser = argparse.ArgumentParser(description="Conjure craft",
                                      prog="conjure-craft")
+    parser.add_argument('name', help='Name of the package')
     parser.add_argument('bundle', help='Bundle file to package')
     parser.add_argument('-d', '--debug', action='store_true',
                         dest='debug',
@@ -80,10 +84,27 @@ def parse_options(argv):
 def main():
     opts = parse_options(sys.argv[1:])
 
+    if not opts.name:
+        print("A package name is required")
+        sys.exit(1)
+
+    if len(set(string.punctuation) & set(opts.name)) > 0:
+        print("Package must not contain {}".format(string.punctuation))
+        sys.exit(1)
+
+    if os.path.isdir(opts.name):
+        print("Directory already exists for package name, "
+              "please choose another or move to another directory.")
+        sys.exit(1)
+    else:
+        os.makedirs(opts.name)
+
     if not opts.bundle:
-        raise CraftException(
-            "A bundle is required."
-        )
+        print("A bundle is required.")
+        sys.exit(1)
+    if not os.path.isfile(opts.bundle):
+        print("Unable to locate bundle file.")
+        sys.exit(1)
 
     try:
         app = Craft(opts)

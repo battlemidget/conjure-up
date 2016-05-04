@@ -6,12 +6,16 @@ from ubuntui.widgets.input import StringEditor
 
 Schema = OrderedDict([
     ('name', ('Package Name', StringEditor())),
-    ('_version', "0.0.1"),
-    ('_summary', "Enter a summary"),
-    ('_excerpt', "Enter an excerpt"),
-    ('_maintainer', 'Joe Bob <joe.bob@example.com>'),
+    ('version', ('Version', StringEditor(default="0.0.1"))),
+    ('summary', ('Summary', StringEditor(default="Amazing Solution"))),
+    ('excerpt',
+     ('Excerpt', StringEditor(
+         default="Solutions for installing greatness"))),
+     ('maintainer',
+      ('Maintainer',
+       StringEditor(default='Joe Bob <joe.bob@example.com>'))),
     ('bundle',
-     OrderedDict([
+      OrderedDict([
           ('name', ('Bundle Name', StringEditor())),
           ('summary', ('Bundle Summary', StringEditor()))
       ])
