@@ -122,7 +122,7 @@ def main():
     print("")
     info('Building package: {}'.format(opts.name))
     time.sleep(2)
-    success('Package can be found at: ../openstack-contrail_1.0.0_all.deb')
+    success('Package can be found at: openstack-contrail_1.0.0_all.deb')
     print("")
 
     # try:
