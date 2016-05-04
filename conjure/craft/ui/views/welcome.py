@@ -60,7 +60,7 @@ class WelcomeView(WidgetWrap):
                 ], dividechars=1
             )
             items.append(col)
-        items.append(Padding.line_break(""))
+            items.append(Padding.line_break(""))
         for k in self.input_items['bundle'].keys():
             display = self.input_items['bundle'][k][0]
             col = Columns(
@@ -71,7 +71,7 @@ class WelcomeView(WidgetWrap):
                 ], dividechars=1
             )
             items.append(col)
-
+            items.append(Padding.line_break(""))
         return Pile(items)
 
     def cancel(self, button):

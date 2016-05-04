@@ -1,6 +1,9 @@
 from conjure.craft.ui.views.welcome import WelcomeView
-from conjure.utils import pollinate
+from conjure.utils import pollinate, spew
+from conjure import template
 from conjure.models.craft import Schema as CraftSchema
+import json
+import os
 
 
 class WelcomeController:
@@ -14,9 +17,9 @@ class WelcomeController:
     def _format_bundle(self, bundle):
         """ Formats bundle
         """
-        name = bundle['name'][1].value
-        key = bundle['name'][1].value
-        summary = bundle['summary'][1].value
+        name = bundle['name']
+        key = bundle['name']
+        summary = bundle['summary']
         return {
             'name': name,
             'key': key,
@@ -42,11 +45,8 @@ class WelcomeController:
         Arguments:
         items: questionaire results
         """
-
         pollinate(self.app.session_id, 'C002', self.app.log)
         formatted = self._format_craftinput(items)
-        import q
-        q(formatted)
 
     def render(self):
         pollinate(self.app.session_id, 'C001', self.app.log)

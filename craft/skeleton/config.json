@@ -1,0 +1,8 @@
+{
+    "name": "conjure-pkg",
+    "version": "0.0.1",
+    "summary": "Conjure solution",
+    "excerpt": "Conjure excerpt",
+    "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
+    "bundles": []
+}

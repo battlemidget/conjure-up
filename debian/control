@@ -64,6 +64,7 @@ Depends: python3-bson,
          python3-ws4py,
          python3-yaml,
          build-essential,
+         devscripts,
          ${misc:Depends},
          ${python3:Depends},
          ${shlibs:Depends}

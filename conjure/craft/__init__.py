@@ -6,14 +6,21 @@ import sys
 import os
 import uuid
 import string
+import shutil
+import petname
+import json
 from conjure.shell import shell
 from conjure import async
 from ubuntui.ev import EventLoop
 from ubuntui.palette import STYLES
 from conjure.ui import ConjureUI
 from conjure import __version__ as VERSION
+from conjure.utils import spew
 from conjure.log import setup_logging
 from conjure.craft.controllers.welcome import WelcomeController
+
+SKELETON_PATH = "/usr/share/conjure-craft/skeleton"
+
 
 class CraftException(Exception):
     """ Error in crafting
@@ -96,8 +103,6 @@ def main():
         print("Directory already exists for package name, "
               "please choose another or move to another directory.")
         sys.exit(1)
-    else:
-        os.makedirs(opts.name)
 
     if not opts.bundle:
         print("A bundle is required.")
@@ -106,9 +111,30 @@ def main():
         print("Unable to locate bundle file.")
         sys.exit(1)
 
-    try:
-        app = Craft(opts)
-        sys.exit(app.start())
-    except CraftException as e:
-        print(e)
-        sys.exit(1)
+    shutil.copytree(SKELETON_PATH,
+                    opts.name)
+
+    with open(os.path.join(opts.name, 'config.json')) as fp:
+        config = json.load(fp)
+    import q
+    q(config)
+    # write config
+    bundle_key = petname.Name
+    config['name'] = opts.name
+    config['bundles'] = [
+        {
+            'key': bundle_key,
+            'name': "Change-me to a friendly name of the bundle.",
+            'summary': "Change-me to what this bundle does.",
+            'location': "/usr/share/{}/bundles/{}/bundle.yaml".format(opts.name, bundle_key),
+            'bootstrapSeries': 'xenial'
+        }
+    ]
+    spew(os.path.join(opts.name, 'config.json'), json.dumps(config))
+    print("Done")
+    # try:
+    #     app = Craft(opts)
+    #     sys.exit(app.start())
+    # except CraftException as e:
+    #     print(e)
+    #     sys.exit(1)
