@@ -103,21 +103,21 @@ def main():
         print("A package name is required")
         sys.exit(1)
 
-    if len(set(string.punctuation) & set(opts.name)) > 0:
-        print("Package must not contain {}".format(string.punctuation))
-        sys.exit(1)
+    # if len(set(string.punctuation) & set(opts.name)) > 0:
+    #     print("Package must not contain {}".format(string.punctuation))
+    #     sys.exit(1)
 
-    if os.path.isdir(opts.name):
-        print("Directory already exists for package name, "
-              "please choose another or move to another directory.")
-        sys.exit(1)
+    # if os.path.isdir(opts.name):
+    #     print("Directory already exists for package name, "
+    #           "please choose another or move to another directory.")
+    #     sys.exit(1)
 
     if not opts.bundle:
         print("A bundle is required.")
         sys.exit(1)
-    if not os.path.isfile(opts.bundle):
-        print("Unable to locate bundle file.")
-        sys.exit(1)
+    # if not os.path.isfile(opts.bundle):
+    #     print("Unable to locate bundle file.")
+    #     sys.exit(1)
 
     print("")
     info('Building package: {}'.format(opts.name))
