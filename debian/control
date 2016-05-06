@@ -29,6 +29,7 @@ Package: conjure-up
 Architecture: all
 Depends: jq,
          juju (>= 2.0~),
+         git,
          lxd,
          lxd-client,
          python3-bson,
