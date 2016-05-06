@@ -1,8 +1,8 @@
 from conjure.ui.views.newcloud import NewCloudView
 from conjure.models.provider import Schema
 from conjure.utils import juju_path, pollinate
-from configobj import ConfigObj
 import os.path as path
+import toml
 import yaml
 import petname
 
@@ -92,9 +92,10 @@ class NewCloudController:
         # information.
         if cloud == 'lxd':
             if path.isfile('/etc/default/lxd-bridge'):
-                cfg = ConfigObj('/etc/default/lxd-bridge')
+                with open('/etc/default/lxd-bridge') as fp:
+                    cfg = toml.loads(fp.read())
             else:
-                cfg = ConfigObj()
+                cfg = {}
 
             ready = cfg.get('LXD_IPV4_ADDR', None)
             if not ready:
