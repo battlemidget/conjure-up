@@ -13,6 +13,8 @@ class CloudController:
         """ Returns list of clouds filtering out any results
         """
         clouds = set(Juju.clouds().keys())
+        if 'maas' not in clouds:
+            clouds.add('maas')
 
         if BundleModel.whitelist():
             whitelist = set(BundleModel.whitelist())
