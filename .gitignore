@@ -62,3 +62,7 @@ debian/conjure*debhelper
 debian/conjure*substvars
 debian/conjure-up/*
 debian/files
+conjure-up
+conjure*egg*
+easy-install.pth
+site.py
