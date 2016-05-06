@@ -18,12 +18,15 @@ from conjure.controllers.jujucontroller import JujuControllerController
 from conjure.controllers.bootstrapwait import BootstrapWaitController
 from conjure.controllers.lxdsetup import LXDSetupController
 from conjure.log import setup_logging
+from conjure import registry
 import json
 import sys
 import argparse
 import os
 import os.path as path
 import uuid
+import requests
+import toml
 from subprocess import run, PIPE
 
 
@@ -211,12 +214,24 @@ def main():
         print(e)
         sys.exit(1)
 
-    conjure_base_dir = os.environ.get('XDG_DATA_HOME', os.path.join(os.path.expanduser('~'), '.local/conjure'))
+    conjure_base_dir = os.environ.get(
+        'XDG_DATA_HOME',
+        os.path.join(os.path.expanduser('~'), '.local/share/conjure'))
     if not os.path.isdir(conjure_base_dir):
         os.makedirs(conjure_base_dir)
 
     conjure_spells_dir = os.path.join(conjure_base_dir, 'spells')
     conjure_spell_dir = os.path.join(conjure_spells_dir, opts.spell)
+
+    if not os.path.isdir(conjure_spell_dir):
+        spell = registry.get_spell(opts.spell)
+        if spell:
+            print("cloning {}".format(spell['repo']))
+            run('git clone -q --depth 1 https://github.com/{} {}'.format(
+                spell['repo'],
+                conjure_spell_dir
+            ), stderr=PIPE, stdout=PIPE, shell=True)
+
     if os.path.isfile(os.path.join(conjure_spell_dir, 'config.json')):
         metadata = path.join(conjure_spell_dir, 'metadata.json')
         pkg_config = path.join(conjure_spell_dir, 'config.json')
@@ -225,9 +240,9 @@ def main():
         pkg_config = path.join('/usr/share', opts.spell, 'config.json')
 
         if not path.exists(pkg_config) and not path.exists(metadata):
-            os.execl("/usr/share/conjure-up/do-apt-install",
-                     "/usr/share/conjure-up/do-apt-install",
-                     opts.spell)
+            print("Installing package {}".format(opts.spell))
+            run('sudo apt install {}'.format(opts.spell),
+                stdout=PIPE, stderr=PIPE, shell=True)
 
     app = Application(opts, pkg_config, metadata)
     app.start()

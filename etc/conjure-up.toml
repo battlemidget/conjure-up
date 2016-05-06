@@ -1,0 +1,6 @@
+# CONJURE-UP configuration
+
+[registry]
+# Defines the spell registry
+spell_server = "http://conjure-up.io"
+spell_registry_path = "/spells/registry.json"
