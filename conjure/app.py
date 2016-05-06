@@ -19,6 +19,8 @@ from conjure.controllers.bootstrapwait import BootstrapWaitController
 from conjure.controllers.lxdsetup import LXDSetupController
 from conjure.log import setup_logging
 from conjure import registry
+from conjure import utils
+from conjure.shell import shell
 import json
 import sys
 import argparse
@@ -27,7 +29,6 @@ import os.path as path
 import uuid
 import requests
 import toml
-from subprocess import run, PIPE
 
 
 class ApplicationException(Exception):
@@ -196,7 +197,7 @@ def main():
 
     if os.geteuid() == 0:
         print("")
-        print("This should _not_ be run as root or with sudo.")
+        utils.warning("This should _not_ be run as root or with sudo.")
         print("")
         sys.exit(1)
 
@@ -204,7 +205,7 @@ def main():
         docs_url = "https://jujucharms.com/docs/stable/getting-started"
         juju_version = Juju.version()
         if int(juju_version[0]) < 2:
-            print(
+            utils.warning(
                 "Only Juju v2 and above is supported, "
                 "your currently installed version is {}.\n\n"
                 "Please refer to {} for help on installing "
@@ -226,11 +227,14 @@ def main():
     if not os.path.isdir(conjure_spell_dir):
         spell = registry.get_spell(opts.spell)
         if spell:
-            print("cloning {}".format(spell['repo']))
-            run('git clone -q --depth 1 https://github.com/{} {}'.format(
+            utils.info("Loading spell for: {}".format(spell['name']))
+            sh = shell('git clone -q --depth 1 https://github.com/{} {}'.format(
                 spell['repo'],
                 conjure_spell_dir
-            ), stderr=PIPE, stdout=PIPE, shell=True)
+            ))
+            if sh.code > 0:
+                self.app.log.debug("Tried to pull upstream but was not "
+                                   "available, will try via apt install.")
 
     if os.path.isfile(os.path.join(conjure_spell_dir, 'config.json')):
         metadata = path.join(conjure_spell_dir, 'metadata.json')
@@ -240,9 +244,11 @@ def main():
         pkg_config = path.join('/usr/share', opts.spell, 'config.json')
 
         if not path.exists(pkg_config) and not path.exists(metadata):
-            print("Installing package {}".format(opts.spell))
-            run('sudo apt install {}'.format(opts.spell),
-                stdout=PIPE, stderr=PIPE, shell=True)
+            utils.info("Loading spell for: {}".format(opts.spell))
+            sh = shell('sudo apt install -qyf {}'.format(opts.spell))
+            if sh.code > 0:
+                utils.warning("Unable to find conjure-up spell: {}".format(opts.spell))
+                sys.exit(1)
 
     app = Application(opts, pkg_config, metadata)
     app.start()

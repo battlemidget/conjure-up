@@ -1,5 +1,6 @@
 import shutil
 import os
+from termcolor import cprint
 from subprocess import check_call, CalledProcessError
 from conjure.models.bundle import BundleModel
 from conjure.async import submit
@@ -9,6 +10,17 @@ class UtilsException(Exception):
     """ Error in utils
     """
     pass
+
+def info(msg):
+    """ Prints a colored info message to screen
+    """
+    cprint("[info] {}".format(msg), 'green', attrs=['bold'])
+
+
+def warning(msg):
+    """ Prints a colored warning message to screen
+    """
+    cprint("[warning] {}".format(msg), 'red', attrs=['bold'])
 
 
 def install_home():
