@@ -45,8 +45,12 @@ class ApplicationConfig:
         self.cache = self.load()
         # Reference to entire UI
         self.ui = None
+
         # Global config attr
         self.config = self.cache.get('config', None)
+
+        self.craft = None
+
         # CLI arguments
         self.argv = None
         # List of all known controllers to be rendered
@@ -88,8 +92,7 @@ class ApplicationConfig:
         try:
             cache_file = os.path.join(cache_deploy_dir, 'cache.json')
             with open(cache_file, 'w') as cache_fp:
-                json.dump({'config': self.config,
-                           'current_model': self.current_model,
+                json.dump({'current_model': self.current_model,
                            'current_controller': self.current_controller,
                            'env': self.env,
                            'complete': self.complete,
@@ -118,20 +121,20 @@ class ApplicationConfig:
 
 
 class Application:
-    def __init__(self, argv, pkg_config, metadata):
+    def __init__(self, argv, spell, metadata):
         """ init
 
         Arguments:
         argv: Options passed in from cli
-        pkg_config: path to solution config.json
+        spell: path to spell
         metadata: path to solutions metadata.json
         """
         self.app = ApplicationConfig()
         self.metadata = metadata
-        self.pkg_config = pkg_config
-        with open(self.pkg_config) as json_f:
-            config = json.load(json_f)
-            config['config_filename'] = self.pkg_config
+        self.spell = spell
+        with open(self.spell) as json_f:
+            craft = json.load(json_f)
+            craft['craft_filename'] = self.spell
 
         with open(self.metadata) as json_f:
             config['metadata_filename'] = path.abspath(self.metadata)
@@ -167,7 +170,7 @@ class Application:
         if self.app.argv.status_only:
             self.app.controllers['finish'].render(bundle=None)
         else:
-            self.app.controllers['welcome'].render()
+            self.app.controllers['clouds'].render()
 
     def start(self):
         EventLoop.build_loop(self.app.ui, STYLES,
@@ -196,9 +199,7 @@ def main():
     opts = parse_options(sys.argv[1:])
 
     if os.geteuid() == 0:
-        print("")
         utils.warning("This should _not_ be run as root or with sudo.")
-        print("")
         sys.exit(1)
 
     try:
@@ -238,17 +239,17 @@ def main():
 
     if os.path.isfile(os.path.join(conjure_spell_dir, 'config.json')):
         metadata = path.join(conjure_spell_dir, 'metadata.json')
-        pkg_config = path.join(conjure_spell_dir, 'config.json')
+        spell = path.join(conjure_spell_dir, 'config.json')
     else:
         metadata = path.join('/usr/share', opts.spell, 'metadata.json')
-        pkg_config = path.join('/usr/share', opts.spell, 'config.json')
+        spell = path.join('/usr/share', opts.spell, 'config.json')
 
-        if not path.exists(pkg_config) and not path.exists(metadata):
+        if not path.exists(spell) and not path.exists(metadata):
             utils.info("Loading spell for: {}".format(opts.spell))
             sh = shell('sudo apt install -qyf {}'.format(opts.spell))
             if sh.code > 0:
                 utils.warning("Unable to find conjure-up spell: {}".format(opts.spell))
                 sys.exit(1)
 
-    app = Application(opts, pkg_config, metadata)
+    app = Application(opts, spell, metadata)
     app.start()

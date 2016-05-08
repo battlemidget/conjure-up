@@ -5,75 +5,18 @@ class BundleModelException(Exception):
 class BundleModel:
     """ Stores bundle location for juju deploy
     """
-    bundle = {
-        "key": None,
-        "name": None,
-        "summary": None,
-        "revision": None,
-        "location": None,
-        "blacklist": [],
-        "whitelist": [],
-        "recommendedCharms": [],
-        "bootstrapSeries": None
-    }
+    def __init__(self, bundle):
+        self.key = bundle.get('key', None)
+        self.name = bundle.get('name', None)
+        self.summary = bundle.get('summary', None)
+        self.revision = bundle.get('revision', None)
+        self.location = bundle.get('location', None)
+        self.blacklist = bundle.get('blacklist', [])
+        self.whitelist = bundle.get('whitelist', [])
+        self.recommendedCharms = bundle.get('recommendedCharms', [])
+        self.bootstrapSeries = bundle.get('bootstrapSeries', None)
 
-    @classmethod
-    def key(cls):
-        """ Returns key of resource
-        """
-        return cls.bundle.get('key', None)
-
-    @classmethod
-    def location(cls):
-        """ Location of bundle, this will override key as
-        location can contain namespaced bundles
-        """
-        return cls.bundle.get('location', None)
-
-    @classmethod
-    def bootstrapSeries(cls):
-        """ Returns a defined bootstrap-series
-        """
-        return cls.bundle.get('bootstrapSeries', None)
-
-    @classmethod
-    def name(cls):
-        """ Returns name of resource
-        """
-        return cls.bundle.get('name', None)
-
-    @classmethod
-    def summary(cls):
-        """ Returns summary of resource
-        """
-        return cls.bundle.get('summary', None)
-
-    @classmethod
-    def revision(cls):
-        """ Returns revision of resource
-        """
-        return cls.bundle.get('revision', None)
-
-    @classmethod
-    def whitelist(cls):
-        """ Returns whitelisted provider types
-        """
-        return cls.bundle.get('whitelist', [])
-
-    @classmethod
-    def blacklist(cls):
-        """ Returns blacklisted provider types
-        """
-        return cls.bundle.get('blacklist', [])
-
-    @classmethod
-    def recommended(cls):
-        """ Returns recommended charms
-        """
-        return cls.bundle.get('recommendedCharms', [])
-
-    @classmethod
-    def to_entity(cls, use_latest=True):
+    def to_entity(self, use_latest=True):
         """ Returns proper entity key to query the charmstore.
 
         Arguments:
@@ -82,21 +25,20 @@ class BundleModel:
         Returns:
         Formatted entity string suitable for charmstore lookup
         """
-        if cls.location() is None and cls.key() is None:
+        if self.location is None and self.key is None:
             raise BundleModelException("Unable to determine bundle path.")
-        if cls.location():
-            return cls.location()
+        if self.location:
+            return self.location
         if not use_latest:
-            return "{}-{}".format(cls.key(), cls.revision())
-        return cls.key()
+            return "{}-{}".format(self.key, self.revision)
+        return self.key
 
-    @classmethod
-    def to_path(cls):
+    def to_path(self):
         """ Returns bundle path suitable for juju deploy <bundle>
         """
-        bundle = cls.key()
+        bundle = self.key
         if bundle is None:
             raise BundleModelException("Unable to determine bundle")
-        if cls.revision() is not None:
-            bundle = "{}-{}".format(bundle, cls.revision())
+        if self.revision is not None:
+            bundle = "{}-{}".format(bundle, self.revision)
         return "cs:bundle/{}".format(bundle)

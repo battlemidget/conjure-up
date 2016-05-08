@@ -20,7 +20,9 @@ def info(msg):
 def warning(msg):
     """ Prints a colored warning message to screen
     """
+    print("")
     cprint("[warning] {}".format(msg), 'red', attrs=['bold'])
+    print("")
 
 
 def install_home():
