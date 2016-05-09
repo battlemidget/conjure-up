@@ -63,6 +63,6 @@ debian/conjure*substvars
 debian/conjure-up/*
 debian/files
 conjure-up
-conjure*egg*
+conjure-up.egg-link
 easy-install.pth
 site.py
