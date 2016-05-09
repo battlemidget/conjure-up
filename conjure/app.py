@@ -7,7 +7,7 @@ from conjure.ui import ConjureUI
 from conjure.juju import Juju
 from conjure import async
 from conjure import __version__ as VERSION
-from conjure.models.bundle import BundleModel
+from conjure.models.craft import CraftModel
 from conjure.controllers.welcome import WelcomeController
 from conjure.controllers.finish import FinishController
 from conjure.controllers.deploysummary import DeploySummaryController
@@ -76,7 +76,7 @@ class ApplicationConfig:
     def save(self):
         """ Create a cache of the current deployment containing the following
 
-        Bundle key, deploy status, juju controller
+        deploy status, juju controller
         """
         cache_home_dir = os.environ.get('XDG_CACHE_HOME', os.path.join(
             os.path.expanduser('~'),
@@ -97,8 +97,7 @@ class ApplicationConfig:
                 json.dump({'current_model': self.current_model,
                            'current_controller': self.current_controller,
                            'env': self.env,
-                           'complete': self.complete,
-                           'selected_bundle': BundleModel.bundle}, cache_fp)
+                           'complete': self.complete}, cache_fp)
         except Exception as e:
             return self.ui.show_exception_message(e)
 
