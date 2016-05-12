@@ -10,7 +10,7 @@ from tempfile import NamedTemporaryFile
 import shutil
 from conjure.utils import spew
 
-cs = 'https://api.jujucharms.com/v4'
+cs = 'https://api.jujucharms.com/v5'
 
 
 class CharmStoreException(Exception):

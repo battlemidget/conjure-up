@@ -19,7 +19,7 @@ class TUI:
         self.app.log.debug("TUI finish")
 
     def render(self):
-        self.app.log.debug("TUI render")
+        print("Deploying {}".format(self.app.config['spell']))
 
 
 class GUI:

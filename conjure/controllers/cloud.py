@@ -9,10 +9,15 @@ class TUI:
         self.app = app
 
     def finish(self):
-        self.app.log.debug("TUI finish")
+        self.app.controllers['finish'].render()
 
     def render(self):
-        self.app.log.debug("TUI cloud render")
+        if 'default_cloud' not in self.app.config['metadata'].keys():
+            print("Selecting localhost provider for deployment")
+        else:
+            print("Selecting {} provider for deployment".format(
+                self.app.config['metadata']['default_cloud']))
+        self.finish()
 
 
 class GUI:
@@ -53,7 +58,8 @@ class GUI:
     def render(self):
         self.clouds = self._list_clouds()
         self.config = self.app.config
-        self.excerpt = ("Please select from a list of available clouds")
+        self.excerpt = (
+            "Please select where to deploy {}".format(self.config['spell']))
         self.view = CloudView(self.app,
                               self.clouds,
                               self.finish)

@@ -1,4 +1,4 @@
-from conjure.ui.views.welcome import WelcomeView
+from conjure.ui.views.variant import VariantView
 from conjure.models.bundle import BundleModel
 from conjure.juju import Juju
 from conjure.utils import pollinate
@@ -20,10 +20,10 @@ class TUI:
 class GUI:
     def __init__(self, app):
         self.app = app
-        self.view = WelcomeView(self.app, self.finish)
+        self.view = VariantView(self.app, self.finish)
 
     def finish(self, name):
-        """ Finalizes welcome controller
+        """ Finalizes variant controller
 
         Arguments:
         name: name of charm/bundle to use
@@ -44,7 +44,7 @@ class GUI:
             self.app.controllers['jujucontroller'].render()
 
     def render(self):
-        self.app.log.debug("Rendering GUI controller for Welcome")
+        self.app.log.debug("Rendering GUI controller for Variants")
         pollinate(self.app.session_id, 'W001', self.app.log)
         config = self.app.config
         self.app.ui.set_header(
@@ -54,7 +54,7 @@ class GUI:
         self.app.ui.set_body(self.view)
 
 
-def load_welcome_controller(app):
+def load_variant_controller(app):
     if app.argv.headless:
         return TUI(app)
     else:

@@ -9,7 +9,7 @@ from conjure import async
 from conjure import __version__ as VERSION
 from conjure.download import download, get_remote_url
 from conjure.models.bundle import BundleModel
-from conjure.controllers.welcome import load_welcome_controller
+from conjure.controllers.variant import load_variant_controller
 from conjure.controllers.finish import load_finish_controller
 from conjure.controllers.deploysummary import load_deploysummary_controller
 from conjure.controllers.deploy import load_deploy_controller
@@ -114,23 +114,27 @@ class ApplicationConfig:
 
 
 class Application:
-    def __init__(self, argv, spell, metadata):
+    def __init__(self, argv, spell, metadata, global_conf):
         """ init
 
         Arguments:
         argv: Options passed in from cli
         metadata: path to solutions metadata.json
+        spell: name of spell
+        global_conf: global conjure-up config
         """
         self.app = ApplicationConfig(argv)
         self.app.session_id = os.getenv('CONJURE_TEST_SESSION_ID',
                                         '{}/{}'.format(
                                             spell,
                                             str(uuid.uuid4())))
-        self.app.config = {'metadata': metadata, 'spell': spell}
+        self.app.config = {'metadata': metadata,
+                           'spell': spell,
+                           'global': global_conf}
         self.app.ui = ConjureUI()
 
         self.app.controllers = {
-            'welcome': load_welcome_controller(self.app),
+            'variant': load_variant_controller(self.app),
             'clouds': load_cloud_controller(self.app),
             'newcloud': load_newcloud_controller(self.app),
             'lxdsetup': load_lxdsetup_controller(self.app),
@@ -150,12 +154,12 @@ class Application:
             EventLoop.exit(0)
 
     def _start(self, *args, **kwargs):
-        """ Initially load the welcome screen
+        """ Initially load the clouds screen
         """
         if self.app.argv.status_only:
             self.app.controllers['finish'].render(bundle=None)
         else:
-            self.app.controllers['welcome'].render()
+            self.app.controllers['clouds'].render()
 
     def start(self):
         if self.app.argv.headless:
@@ -229,8 +233,8 @@ def main():
             os.path.expanduser('~'),
             '.cache/conjure-up', spell))
 
-        metadata = os.path.join(spell_dir, 'conjure/metadata.json')
-        if not path.exists(metadata):
+        metadata_path = os.path.join(spell_dir, 'conjure/metadata.json')
+        if not path.exists(metadata_path):
             remote = get_remote_url(opts.spell)
             if remote is not None:
                 if not path.isdir(spell_dir):
@@ -241,8 +245,9 @@ def main():
                 print("Could not find spell: {}".format(spell))
                 sys.exit(1)
         else:
-            with open(metadata) as fp:
+            with open(metadata_path) as fp:
                 metadata = json.load(fp)
+                metadata['path'] = metadata_path
 
-    app = Application(opts, spell, metadata)
+    app = Application(opts, spell, metadata, global_conf)
     app.start()

@@ -106,7 +106,7 @@ class Juju:
         cls.is_authenticated = True
 
     @classmethod
-    def bootstrap(cls, controller, cloud, series=None, log=None):
+    def bootstrap(cls, controller, cloud, series="xenial", log=None):
         """ Performs juju bootstrap
 
         If not LXD pass along the newly defined credentials
