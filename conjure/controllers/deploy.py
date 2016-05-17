@@ -2,7 +2,7 @@ from conjure.api.models import model_info
 from conjure.charm import get_bundle
 from conjure.models.bundle import BundleModel
 from conjure.utils import pollinate
-from conjure.juju import Juju, current_controller
+from conjure import juju
 
 from bundleplacer.config import Config
 from bundleplacer.maas import connect_to_maas
@@ -69,7 +69,8 @@ class GUI:
         if info['ProviderType'] == 'maas':
             pollinate(self.app.session_id, 'PM', self.app.log)
             try:
-                controller_meta = Juju.controller_info(current_controller())
+                controller_meta = juju.controller_info(
+                    juju.get_current_controller())
                 bootstrap_config = controller_meta['bootstrap-config']
                 self.app.log.debug(
                     'bootstrap_config {}'.format(bootstrap_config))
@@ -79,7 +80,7 @@ class GUI:
                 self.app.log.error(msg)
                 return self.app.ui.show_exception_message(Exception(msg))
 
-            maasoauth = Juju.credential(bootstrap_config['cloud-type'],
+            maasoauth = juju.credential(bootstrap_config['cloud-type'],
                                         bootstrap_config['credential'])
             # add maas creds to env
             self.app.env['MAAS_SERVER'] = bootstrap_config['region']

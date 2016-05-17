@@ -5,7 +5,6 @@ import argparse
 import sys
 import json
 import os
-from conjure.shell import shell
 
 
 class ScaffoldException(Exception):
@@ -26,7 +25,7 @@ class Scaffold:
                 "{} exists, please specify another.".format(opts.directory)
             )
 
-        shell('mkdir -p {}'.format(opts.directory))
+        os.makedirs(opts.directory)
 
         config_path = "/usr/share/{}/config.json".format(opts.name)
         if not os.path.isfile(config_path):
@@ -39,7 +38,7 @@ class Scaffold:
         for bundle in config['bundles']:
             bundle_key_path = os.path.join(opts.directory, bundle['key'])
             print("Creating {} directory".format(bundle_key_path))
-            shell('mkdir -p {}'.format(bundle_key_path))
+            os.makedirs(bundle_key_path)
 
         # render_lxd_sh(os.path.join(opts.directory, 'lxd.sh'))
 

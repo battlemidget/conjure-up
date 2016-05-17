@@ -1,6 +1,6 @@
 from conjure.ui.views.jujucontroller import JujuControllerView
 from conjure.utils import pollinate
-from conjure.juju import Juju
+from conjure import juju
 from ubuntui.ev import EventLoop
 from conjure.models.bundle import BundleModel
 from conjure import async
@@ -51,7 +51,7 @@ class GUI:
         if self.bootstrap:
             self.app.log.debug("Performing bootstrap: {} {}".format(
                 controller, self.cloud))
-            future = Juju.bootstrap_async(
+            future = juju.bootstrap_async(
                 controller=self.app.current_controller,
                 cloud=self.cloud,
                 series=BundleModel.bootstrapSeries(),
@@ -74,7 +74,7 @@ class GUI:
             return self.handle_exception(Exception(result.errors()))
         pollinate(self.app.session_id, 'J004', self.app.log)
         EventLoop.remove_alarms()
-        Juju.switch(self.app.current_controller)
+        juju.switch(self.app.current_controller)
         self._post_bootstrap_exec()
 
     def _post_bootstrap_exec(self):
@@ -126,7 +126,7 @@ class GUI:
         pollinate(self.app.session_id, 'J002', self.app.log)
         self.app.log.debug("Switching to controller: {}".format(
             self.app.current_controller))
-        Juju.switch(self.app.current_controller)
+        juju.switch(self.app.current_controller)
         self.app.controllers['deploy'].render(self.app.current_controller)
 
     def render(self, cloud=None, bootstrap=None):
@@ -153,11 +153,11 @@ class GUI:
             return self.handle_exception(Exception(
                 "Unable to determine a controller to bootstrap"))
         else:
-            controllers = Juju.controllers().keys()
+            controllers = juju.get_controllers().keys()
             models = {}
             for c in controllers:
-                Juju.switch(c)
-                models[c] = Juju.models()
+                juju.switch(c)
+                models[c] = juju.get_models()
             self.view = JujuControllerView(self.app,
                                            models,
                                            self.finish)

@@ -1,6 +1,6 @@
 from conjure.ui.views.services import ServicesView
 from ubuntui.ev import EventLoop
-from conjure.juju import Juju
+from conjure import juju
 from functools import partial
 from conjure import async
 from conjure.models.bundle import BundleModel
@@ -107,7 +107,7 @@ class GUI:
         self.app.ui.set_footer('Deploying bundle...')
         pollinate(self.app.session_id, 'DS', self.app.log)
         future = async.submit(
-            partial(Juju.deploy_bundle, self.bundle),
+            partial(juju.deploy_bundle, self.bundle),
             partial(self.handle_exception, "ED"))
         future.add_done_callback(self._deploy_bundle_done)
 

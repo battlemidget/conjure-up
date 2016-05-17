@@ -1,6 +1,6 @@
 from conjure.ui.views.variant import VariantView
 from conjure.models.bundle import BundleModel
-from conjure.juju import Juju
+from conjure import juju
 from conjure.utils import pollinate
 
 

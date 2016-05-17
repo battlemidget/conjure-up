@@ -1,6 +1,6 @@
 from conjure.ui.views.lxdsetup import LXDSetupView
 from conjure.utils import pollinate, spew
-from conjure.shell import shell
+from subprocess import run
 from tempfile import NamedTemporaryFile
 
 
@@ -69,14 +69,15 @@ class GUI:
                                 delete=False) as tempf:
             self.app.log.debug("Saving LXD config to {}".format(tempf.name))
             spew(tempf.name, out)
-            sh = shell('sudo mv {} /etc/default/lxd-bridge'.format(
-                tempf.name))
-            if sh.code > 0:
+            sh = run('sudo mv {} /etc/default/lxd-bridge'.format(
+                tempf.name), shell=True)
+            if sh.returncode > 0:
                 return self.app.ui.show_exception_message(
-                    Exception("Problem saving config: {}".format(sh.errors())))
+                    Exception("Problem saving config: {}".format(
+                        sh.stderr.decode('utf-8'))))
 
         self.app.log.debug("Restarting lxd-bridge")
-        shell("sudo systemctl restart lxd-bridge.service")
+        run("sudo systemctl restart lxd-bridge.service", shell=True)
 
         pollinate(self.app.session_id, 'L002', self.app.log)
         self.app.controllers['jujucontroller'].render(

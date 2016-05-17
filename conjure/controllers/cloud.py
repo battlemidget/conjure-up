@@ -1,5 +1,5 @@
 from conjure.ui.views.cloud import CloudView
-from conjure.juju import Juju
+from conjure import juju
 from conjure.utils import pollinate, info, warning
 import sys
 
@@ -12,7 +12,7 @@ class TUI:
         self.app.log.debug("TUI finish")
 
     def render(self):
-        if self.app.argv.cloud not in Juju.clouds().keys():
+        if self.app.argv.cloud not in juju.get_clouds().keys():
             warning("Unknown Cloud: {}".format(self.app.argv.cloud))
             sys.exit(1)
         info(
@@ -26,7 +26,7 @@ class GUI:
     def _list_clouds(self):
         """ Returns list of clouds filtering out any results
         """
-        clouds = set(Juju.clouds().keys())
+        clouds = set(juju.get_clouds().keys())
 
         if 'cloud_whitelist' in self.app.config['metadata']:
             whitelist = set(self.app.config['metadata']['cloud_whitelist'])

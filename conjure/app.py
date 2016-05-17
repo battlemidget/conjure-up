@@ -4,7 +4,7 @@
 from ubuntui.ev import EventLoop
 from ubuntui.palette import STYLES
 from conjure.ui import ConjureUI
-from conjure.juju import Juju
+from conjure import juju
 from conjure import async
 from conjure import utils
 from conjure import __version__ as VERSION
@@ -77,8 +77,8 @@ class ApplicationConfig:
             '.cache'))
         try:
             cache_deploy_dir = os.path.join(cache_home_dir,
-                                            Juju.current_controller(),
-                                            Juju.current_model())
+                                            juju.get_current_controller(),
+                                            juju.get_current_model())
         except Exception as e:
             return self.ui.show_exception_message(e)
 
@@ -105,8 +105,8 @@ class ApplicationConfig:
             '.cache'))
         try:
             cache_deploy_dir = os.path.join(cache_home_dir,
-                                            Juju.current_controller(),
-                                            Juju.current_model())
+                                            juju.get_current_controller(),
+                                            juju.get_current_model())
         except:
             return {}
 
@@ -211,7 +211,7 @@ def main():
 
     try:
         docs_url = "https://jujucharms.com/docs/stable/getting-started"
-        juju_version = Juju.version()
+        juju_version = juju.version()
         if int(juju_version[0]) < 2:
             utils.warning(
                 "Only Juju v2 and above is supported, "
