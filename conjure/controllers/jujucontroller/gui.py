@@ -25,6 +25,60 @@ def __handle_exception(exc):
     return app.ui.show_exception_message(exc)
 
 
+def __handle_bootstrap_done(future):
+    app.log.debug("handle bootstrap")
+    result = future.result()
+    if result.code > 0:
+        app.log.error(result.errors())
+        return __handle_exception(Exception(result.errors()))
+    utils.pollinate(app.session_id, 'J004')
+    EventLoop.remove_alarms()
+    juju.switch(app.current_controller)
+    __post_bootstrap_exec()
+
+
+def __post_bootstrap_exec():
+    """ Executes post-bootstrap.sh if exists
+    """
+    _post_bootstrap_sh = path.join(app.config['metadata']['spell-dir'],
+                                   'scripts/post-bootstrap.sh')
+    if path.isfile(_post_bootstrap_sh) \
+       and os.access(_post_bootstrap_sh, os.X_OK):
+        app.ui.set_footer('Running post-bootstrap tasks.')
+        utils.pollinate(app.session_id, 'J001')
+        app.log.debug("post_bootstrap running: {}".format(
+            _post_bootstrap_sh
+        ))
+        try:
+            future = async.submit(partial(check_output,
+                                          _post_bootstrap_sh,
+                                          shell=True,
+                                          env=app.env),
+                                  __handle_exception)
+            future.add_done_callback(__post_bootstrap_done)
+        except Exception as e:
+            return __handle_exception(e)
+
+
+def __post_bootstrap_done(future):
+    try:
+        result = json.loads(future.result().decode('utf8'))
+    except Exception as e:
+        return __handle_exception(e)
+
+    app.log.debug("post_bootstrap_done: {}".format(result))
+    if result['returnCode'] > 0:
+        utils.pollinate(app.session_id, 'E001')
+        return __handle_exception(Exception(
+            'There was an error during the post '
+            'bootstrap processing phase: {}.'.format(result)))
+    utils.pollinate(app.session_id, 'J002')
+    app.log.debug("Switching to controller: {}".format(
+        app.current_controller))
+    juju.switch(app.current_controller)
+    controllers.use('deploy').render(app.current_controller)
+
+
 def finish(controller=None, back=False):
     """ Deploy to juju controller
 
@@ -58,72 +112,6 @@ def finish(controller=None, back=False):
         controllers.use('deploy').render(app.current_controller)
 
 
-def __handle_bootstrap_done(future):
-    app.log.debug("handle bootstrap")
-    result = future.result()
-    if result.code > 0:
-        app.log.error(result.errors())
-        return __handle_exception(Exception(result.errors()))
-    utils.pollinate(app.session_id, 'J004')
-    EventLoop.remove_alarms()
-    juju.switch(app.current_controller)
-    __post_bootstrap_exec()
-
-
-def __post_bootstrap_exec():
-    """ Executes post-bootstrap.sh if exists
-    """
-    _post_bootstrap_sh = path.join('/usr/share/',
-                                   app.config['name'],
-                                   'bundles',
-                                   BundleModel.key(),
-                                   'post-bootstrap.sh')
-    if not path.isfile(_post_bootstrap_sh) \
-       or not os.access(_post_bootstrap_sh, os.X_OK):
-        app.log.debug(
-            "Unable to execute: {}, skipping".format(
-                _post_bootstrap_sh))
-        return controllers.use('deploy').render(
-            app.current_controller)
-
-    app.ui.set_footer('Running post-bootstrap tasks.')
-
-    utils.pollinate(app.session_id, 'J001')
-
-    app.log.debug("post_bootstrap running: {}".format(
-        _post_bootstrap_sh
-    ))
-
-    try:
-        future = async.submit(partial(check_output,
-                                      _post_bootstrap_sh,
-                                      shell=True,
-                                      env=app.env),
-                              __handle_exception)
-        future.add_done_callback(__post_bootstrap_done)
-    except Exception as e:
-        return __handle_exception(e)
-
-
-def __post_bootstrap_done(future):
-    try:
-        result = json.loads(future.result().decode('utf8'))
-    except Exception as e:
-        return __handle_exception(e)
-
-    app.log.debug("post_bootstrap_done: {}".format(result))
-    if result['returnCode'] > 0:
-        utils.pollinate(app.session_id, 'E001')
-        return __handle_exception(Exception(
-            'There was an error during the post '
-            'bootstrap processing phase: {}.'.format(result)))
-    utils.pollinate(app.session_id, 'J002')
-    app.log.debug("Switching to controller: {}".format(
-        app.current_controller))
-    juju.switch(app.current_controller)
-    controllers.use('deploy').render(app.current_controller)
-
-
 def render(cloud=None, bootstrap=None):
     """ Render controller
 
@@ -132,14 +120,14 @@ def render(cloud=None, bootstrap=None):
     bootstrap: is this a new environment that needs to be bootstrapped
     """
 
-    cloud = cloud
+    this.cloud = cloud
 
     # Set provider type for post-bootstrap
-    app.env['JUJU_PROVIDERTYPE'] = cloud
+    app.env['JUJU_PROVIDERTYPE'] = this.cloud
 
     bootstrap = bootstrap
 
-    if cloud and bootstrap:
+    if this.cloud and bootstrap:
         if app.current_controller is not None:
             return finish(app.current_controller)
         else:

@@ -1,11 +1,12 @@
 from conjure import juju
 from conjure import utils
+from conjure import controllers
 from conjure.app_config import app
 import sys
 
 
 def finish():
-    app.log.debug("TUI finish")
+    controllers.use('jujucontroller').render(app.argv.cloud)
 
 
 def render():

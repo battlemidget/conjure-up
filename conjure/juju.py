@@ -186,8 +186,8 @@ def get_credentials(secrets=True):
         except:
             raise Exception(
                 "Unable to list credentials: {}".format(
-                    sh.stderr.decode('utf-8')))
-    env = yaml.safe_load(sh.stdout.decode('utf-8'))
+                    sh.stderr.decode('utf8')))
+    env = yaml.safe_load(sh.stdout.decode('utf8'))
     return env['credentials']
 
 
@@ -201,9 +201,9 @@ def get_clouds():
              shell=True, stdout=PIPE, stderr=PIPE)
     if sh.returncode > 0:
         raise Exception(
-            "Unable to list clouds: {}".format(sh.stderr.decode('utf-8'))
+            "Unable to list clouds: {}".format(sh.stderr.decode('utf8'))
         )
-    return yaml.safe_load(sh.stdout.decode('utf-8'))
+    return yaml.safe_load(sh.stdout.decode('utf8'))
 
 
 def get_cloud(name):
@@ -260,8 +260,8 @@ def get_controller_info(name=None):
     if sh.returncode > 0:
         raise Exception(
             "Unable to determine controller: {}".format(
-                sh.stderr.decode('utf-8')))
-    out = yaml.safe_load(sh.stdout.decode('utf-8'))
+                sh.stderr.decode('utf8')))
+    out = yaml.safe_load(sh.stdout.decode('utf8'))
     try:
         return next(iter(out.values()))
     except:
@@ -279,7 +279,7 @@ def get_controllers():
     if sh.returncode > 0:
         raise LookupError(
             "Unable to list controllers: {}".format(sh.stder))
-    env = json.loads(sh.stdout.decode('utf-8')[0])
+    env = json.loads(sh.stdout.decode('utf8')[0])
     return env['controllers']
 
 
@@ -369,8 +369,8 @@ def get_models():
              shell=True, stdout=PIPE, stderr=PIPE)
     if sh.returncode > 0:
         raise LookupError(
-            "Unable to list models: {}".format(sh.stderr.decode('utf-8')))
-    out = yaml.safe_load(sh.stdout.decode('utf-8'))
+            "Unable to list models: {}".format(sh.stderr.decode('utf8')))
+    out = yaml.safe_load(sh.stdout.decode('utf8'))
     return out
 
 
@@ -384,8 +384,8 @@ def version():
     sh = run('juju version', shell=True, stdout=PIPE, stderr=PIPE)
     if sh.returncode > 0:
         raise Exception(
-            "Unable to get Juju Version".format(sh.stderr.decode('utf-8')))
-    out = sh.stdout.decode('utf-8')
+            "Unable to get Juju Version".format(sh.stderr.decode('utf8')))
+    out = sh.stdout.decode('utf8')
     if isinstance(out, list):
         return out.pop()
     else:

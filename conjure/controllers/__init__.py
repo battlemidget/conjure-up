@@ -8,7 +8,9 @@ Each controller will contain 2 modules, TUI (stdout) and GUI (urwid).
 
 Both TUI() and GUI() should provide at least an entry method (render) and an
 exit method (finish). This is a hard rule and is documented here so that
-the controllers can stay consistent in their execution.
+the controllers can stay consistent in their execution. All other functions
+in their respective module should be prepended with double underscore '__'
+as they should only be relevant to that module.
 
 See any of the controllers for examples.
 
