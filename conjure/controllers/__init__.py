@@ -12,6 +12,12 @@ the controllers can stay consistent in their execution. All other functions
 in their respective module should be prepended with double underscore '__'
 as they should only be relevant to that module.
 
+If both renderers share code place those functions inside a `common.py` module
+and import relative to the render module, for example (from newcloud
+controller),
+
+from .common import check_bridge_exists
+
 See any of the controllers for examples.
 
 Usage:

@@ -3,11 +3,12 @@ from conjure.models.provider import Schema
 from conjure import utils
 from conjure import controllers
 from conjure.app_config import app
-from configobj import ConfigObj
 import os.path as path
 import yaml
 import petname
 import sys
+
+from .common import check_bridge_exists
 
 this = sys.modules[__name__]
 this.cloud = None
@@ -92,17 +93,11 @@ def render(cloud):
     # a user to configure a LXD bridge with suggested network
     # information.
     if cloud == 'localhost':
-        if path.isfile('/etc/default/lxd-bridge'):
-            cfg = ConfigObj('/etc/default/lxd-bridge')
-        else:
-            cfg = ConfigObj()
-
-        ready = cfg.get('LXD_IPV4_ADDR', None)
-        if not ready:
+        if not check_bridge_exists():
             return controllers.use('lxdsetup').render()
 
-        app.log.debug("Found an IPv4 address ({}), "
-                      "assuming LXD is configured.".format(ready))
+        app.log.debug("Found an IPv4 address, "
+                      "assuming LXD is configured.")
         return controllers.use('jujucontroller').render(
             cloud='localhost', bootstrap=True)
 

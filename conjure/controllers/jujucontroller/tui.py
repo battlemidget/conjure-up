@@ -8,6 +8,8 @@ import os
 import petname
 import sys
 
+from .common import check_bridge_exists
+
 
 def finish():
     utils.info("Bootstrap complete")
@@ -15,6 +17,13 @@ def finish():
 
 
 def render(cloud):
+    if app.argv.cloud == "localhost":
+        if not check_bridge_exists():
+            back = "{} to localhost".format(app.argv.config['spell'])
+            os.execl("/usr/share/conjure-up/run-lxd-config",
+                     "/usr/share/conjure-up/run-lxd-config",
+                     back)
+
     if not juju.available():
         utils.info("Bootstrapping controller, please wait.")
         app.current_controller = petname.Name()

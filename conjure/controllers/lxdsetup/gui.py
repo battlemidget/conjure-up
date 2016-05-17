@@ -63,14 +63,14 @@ def finish(lxdnetwork=None, back=False):
         if sh.returncode > 0:
             return app.ui.show_exception_message(
                 Exception("Problem saving config: {}".format(
-                    sh.stderr.decode('utf-8'))))
+                    sh.stderr.decode('utf8'))))
 
     app.log.debug("Restarting lxd-bridge")
     run("sudo systemctl restart lxd-bridge.service", shell=True)
 
     utils.pollinate(app.session_id, 'L002')
     controllers.use('jujucontroller').render(
-        cloud='lxd', bootstrap=True)
+        cloud='localhost', bootstrap=True)
 
 
 def render():
