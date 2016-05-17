@@ -3,6 +3,7 @@ import os
 from termcolor import colored
 from subprocess import check_call, CalledProcessError
 from conjure.async import submit
+from conjure.app_config import app
 
 
 class UtilsException(Exception):
@@ -105,7 +106,7 @@ def install_user():
     return user
 
 
-def pollinate(session, tag, log):
+def pollinate(session, tag):
     """ fetches random seed
 
     Tag definitions:
@@ -142,7 +143,6 @@ def pollinate(session, tag, log):
     Arguments:
     session: randomly generated session id
     tag: custom tag
-    log: logger
     """
     agent_str = 'conjure/{}/{}'.format(session, tag)
 
@@ -152,8 +152,8 @@ def pollinate(session, tag, log):
                    "--data /dev/null https://entropy.ubuntu.com "
                    "> /dev/null 2>&1".format(
                        agent_str))
-            log.debug("pollinate: {}".format(cmd))
+            app.log.debug("pollinate: {}".format(cmd))
             check_call(cmd, shell=True)
         except CalledProcessError as e:
-            log.warning("Generating random seed failed: {}".format(e))
+            app.log.warning("Generating random seed failed: {}".format(e))
     submit(do_pollinate, lambda _: None)

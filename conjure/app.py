@@ -9,17 +9,9 @@ from conjure import async
 from conjure import utils
 from conjure import __version__ as VERSION
 from conjure.download import download, get_remote_url
-from conjure.models.bundle import BundleModel
-from conjure.controllers.variant import load_variant_controller
-from conjure.controllers.finish import load_finish_controller
-from conjure.controllers.deploysummary import load_deploysummary_controller
-from conjure.controllers.deploy import load_deploy_controller
-from conjure.controllers.cloud import load_cloud_controller
-from conjure.controllers.newcloud import load_newcloud_controller
-from conjure.controllers.jujucontroller import load_jujucontroller_controller
-from conjure.controllers.bootstrapwait import load_bootstrapwait_controller
-from conjure.controllers.lxdsetup import load_lxdsetup_controller
+from conjure import controllers
 from conjure.log import setup_logging
+from conjure.app_config import app
 from configobj import ConfigObj
 import json
 import sys
@@ -27,94 +19,6 @@ import argparse
 import os
 import os.path as path
 import uuid
-
-
-class ApplicationException(Exception):
-    """ Error in application
-    """
-
-
-class ApplicationConfig:
-    """ Application config encapsulating common attributes
-    used throughout the lifetime of the application.
-    """
-    def __init__(self, argv):
-        # Try to load cache file
-        self.cache = self.load()
-        # Reference to entire UI
-        self.ui = None
-        # Global config attr
-        self.config = self.cache.get('config', None)
-        # CLI arguments
-        self.argv = argv
-        # List of all known controllers to be rendered
-        self.controllers = None
-        # Current Juju model
-        self.current_model = self.cache.get('current_model', None)
-        # Current controller
-        self.current_controller = self.cache.get('current_controller',
-                                                 None)
-        # Global session id
-        self.session_id = None
-        # logger
-        self.log = None
-        # Environment to pass to processing tasks
-        self.env = self.cache.get('env', os.environ.copy())
-
-        # Is application deployment complete
-        self.complete = self.cache.get('complete', False)
-
-        # This is a headless install
-        self.headless = False
-
-    def save(self):
-        """ Create a cache of the current deployment containing the following
-
-        Bundle key, deploy status, juju controller
-        """
-        cache_home_dir = os.environ.get('XDG_CACHE_HOME', os.path.join(
-            os.path.expanduser('~'),
-            '.cache'))
-        try:
-            cache_deploy_dir = os.path.join(cache_home_dir,
-                                            juju.get_current_controller(),
-                                            juju.get_current_model())
-        except Exception as e:
-            return self.ui.show_exception_message(e)
-
-        if not os.path.isdir(cache_deploy_dir):
-            os.makedirs(cache_deploy_dir)
-
-        try:
-            cache_file = os.path.join(cache_deploy_dir, 'cache.json')
-            with open(cache_file, 'w') as cache_fp:
-                json.dump({'config': self.config,
-                           'current_model': self.current_model,
-                           'current_controller': self.current_controller,
-                           'env': self.env,
-                           'complete': self.complete,
-                           'selected_bundle': BundleModel.bundle}, cache_fp)
-        except Exception as e:
-            return self.ui.show_exception_message(e)
-
-    def load(self):
-        """ loads cache if applicable
-        """
-        cache_home_dir = os.environ.get('XDG_CACHE_HOME', os.path.join(
-            os.path.expanduser('~'),
-            '.cache'))
-        try:
-            cache_deploy_dir = os.path.join(cache_home_dir,
-                                            juju.get_current_controller(),
-                                            juju.get_current_model())
-        except:
-            return {}
-
-        cache_file = os.path.join(cache_deploy_dir, 'cache.json')
-        if path.isfile(cache_file):
-            with open(cache_file) as cache_fp:
-                return json.load(cache_fp)
-        return {}
 
 
 class Application:
@@ -125,33 +29,18 @@ class Application:
         argv: Options passed in from cli
         metadata: path to solutions metadata.json
         """
-        self.app = ApplicationConfig(argv)
-
-        self.app.log = setup_logging("conjure-up/{}".format(spell),
-                                     self.app.argv.debug)
-
-        if hasattr(self.app.argv, 'cloud'):
-            self.app.headless = True
-
-        self.app.session_id = os.getenv('CONJURE_TEST_SESSION_ID',
-                                        '{}/{}'.format(
-                                            spell,
-                                            str(uuid.uuid4())))
-        self.app.config = {'metadata': metadata,
-                           'spell': spell}
-        self.app.ui = ConjureUI()
-
-        self.app.controllers = {
-            'clouds': load_cloud_controller(self.app),
-            'variants': load_variant_controller(self.app),
-            'newcloud': load_newcloud_controller(self.app),
-            'lxdsetup': load_lxdsetup_controller(self.app),
-            'bootstrapwait': load_bootstrapwait_controller(self.app),
-            'deploy': load_deploy_controller(self.app),
-            'deploysummary': load_deploysummary_controller(self.app),
-            'jujucontroller': load_jujucontroller_controller(self.app),
-            'finish': load_finish_controller(self.app)
-        }
+        app.argv = argv
+        app.log = setup_logging("conjure-up/{}".format(spell),
+                                argv.debug)
+        if hasattr(argv, 'cloud'):
+            app.headless = True
+        app.session_id = os.getenv('CONJURE_TEST_SESSION_ID',
+                                   '{}/{}'.format(
+                                       spell,
+                                       str(uuid.uuid4())))
+        app.config = {'metadata': metadata,
+                      'spell': spell}
+        app.ui = ConjureUI()
 
     def unhandled_input(self, key):
         if key in ['q', 'Q']:
@@ -161,16 +50,16 @@ class Application:
     def _start(self, *args, **kwargs):
         """ Initially load cloud selection screen
         """
-        if self.app.complete:
-            self.app.controllers['finish'].render(bundle=None)
+        if app.complete:
+            controllers.use('finish').render(bundle=None)
         else:
-            self.app.controllers['clouds'].render()
+            controllers.use('clouds').render()
 
     def start(self):
-        if self.app.headless:
+        if app.headless:
             self._start()
         else:
-            EventLoop.build_loop(self.app.ui, STYLES,
+            EventLoop.build_loop(app.ui, STYLES,
                                  unhandled_input=self.unhandled_input)
             EventLoop.set_alarm_in(0.05, self._start)
             EventLoop.run()
