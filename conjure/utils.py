@@ -6,12 +6,6 @@ from conjure.async import submit
 from conjure.app_config import app
 
 
-class UtilsException(Exception):
-    """ Error in utils
-    """
-    pass
-
-
 def info(msg):
     prefix = colored('[info]', 'green', attrs=['bold'])
     print("{} {}".format(prefix, msg))
@@ -64,7 +58,7 @@ def chown(path, user, group=None, recursive=False):
                 for item in files:
                     shutil.chown(os.path.join(root, item), user, group)
     except OSError as e:
-        raise UtilsException(e)
+        raise e
 
 
 def spew(path, data, owner=None):
@@ -80,7 +74,7 @@ def spew(path, data, owner=None):
         try:
             chown(path, owner)
         except:
-            raise UtilsException(
+            raise Exception(
                 "Unable to set ownership of {}".format(path))
 
 
@@ -100,9 +94,9 @@ def slurp(path):
 def install_user():
     """ returns sudo user
     """
-    user = os.getenv('SUDO_USER', None)
-    if not user:
-        user = os.getenv('USER', 'root')
+    user = os.getenv('USER', None)
+    if user is None:
+        raise Exception("Unable to determine current user.")
     return user
 
 

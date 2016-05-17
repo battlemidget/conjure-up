@@ -7,7 +7,7 @@ by passed a '-y' on the cli to trigger a headless (stdout) vs non-headless
 Each controller will contain 2 modules, TUI (stdout) and GUI (urwid).
 
 Both TUI() and GUI() should provide at least an entry method (render) and an
-exit method (finish). This is not a hard rule but it is documented here so that
+exit method (finish). This is a hard rule and is documented here so that
 the controllers can stay consistent in their execution.
 
 See any of the controllers for examples.
