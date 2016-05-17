@@ -1,6 +1,7 @@
 from conjure.api.models import model_info
 from conjure.utils import pollinate
 from conjure.app_config import app
+from conjure import controllers
 
 
 def finish(back=False):
@@ -10,10 +11,10 @@ def finish(back=False):
     back: if true returns to previous controller
     """
     if back:
-        return app.controllers.use('jujucontroller')
+        return controllers.use('jujucontroller')
 
     pollinate(app.session_id, 'PC')
-    app.controllers.use('deploysummary')
+    controllers.use('deploysummary')
 
 
 def render(model):

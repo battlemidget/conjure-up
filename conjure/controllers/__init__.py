@@ -45,7 +45,6 @@ def use(controller):
             pkg = ("conjure.controllers.{}.tui".format(controller))
         else:
             pkg = ("conjure.controllers.{}.gui".format(controller))
-            print(pkg)
         return import_module(pkg)
     except Exception as e:
         raise e

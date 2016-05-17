@@ -76,7 +76,7 @@ def finish(credentials=None, back=False):
         this.cloud = '{}/{}'.format(this.cloud,
                                     credentials['@maas-server'].value)
     utils.pollinate(app.session_id, 'CA')
-    app.controllers['jujucontroller'].render(
+    controllers.use('jujucontroller').render(
         this.cloud, bootstrap=True)
 
 
@@ -91,7 +91,7 @@ def render(cloud):
     # is configured. If not we'll bring up a new view to allow
     # a user to configure a LXD bridge with suggested network
     # information.
-    if cloud == 'lxd':
+    if cloud == 'localhost':
         if path.isfile('/etc/default/lxd-bridge'):
             cfg = ConfigObj('/etc/default/lxd-bridge')
         else:
@@ -99,18 +99,18 @@ def render(cloud):
 
         ready = cfg.get('LXD_IPV4_ADDR', None)
         if not ready:
-            return app.controllers['lxdsetup'].render()
+            return controllers.use('lxdsetup').render()
 
         app.log.debug("Found an IPv4 address ({}), "
                       "assuming LXD is configured.".format(ready))
-        return app.controllers['jujucontroller'].render(
-            cloud='lxd', bootstrap=True)
+        return controllers.use('jujucontroller').render(
+            cloud='localhost', bootstrap=True)
 
     try:
         creds = Schema[cloud]
     except KeyError as e:
         utils.pollinate(app.session_id, 'EC')
-        app.ui.show_exception_message(e)
+        return app.ui.show_exception_message(e)
 
     this.cloud = cloud
     view = NewCloudView(app,

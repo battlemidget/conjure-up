@@ -4,6 +4,7 @@ from conjure.app_config import app
 from conjure.models.bundle import BundleModel
 from conjure.ui.views.jujucontroller import JujuControllerView
 from conjure import utils
+from conjure import controllers
 from functools import partial
 from subprocess import check_output
 from ubuntui.ev import EventLoop
@@ -36,7 +37,7 @@ def finish(controller=None, back=False):
     app.current_controller = controller
 
     if back:
-        return app.controllers.use('clouds').render()
+        return controllers.use('clouds').render()
 
     if this.bootstrap:
         app.log.debug("Performing bootstrap: {} {}".format(
@@ -50,11 +51,11 @@ def finish(controller=None, back=False):
         future.add_done_callback(
             __handle_bootstrap_done)
 
-        app.controllers['bootstrapwait'].render()
+        controllers.use('bootstrapwait').render()
         utils.pollinate(app.session_id, 'J003')
 
     else:
-        app.controllers['deploy'].render(app.current_controller)
+        controllers.use('deploy').render(app.current_controller)
 
 
 def __handle_bootstrap_done(future):
@@ -82,7 +83,7 @@ def __post_bootstrap_exec():
         app.log.debug(
             "Unable to execute: {}, skipping".format(
                 _post_bootstrap_sh))
-        return app.controllers['deploy'].render(
+        return controllers.use('deploy').render(
             app.current_controller)
 
     app.ui.set_footer('Running post-bootstrap tasks.')
@@ -120,7 +121,7 @@ def __post_bootstrap_done(future):
     app.log.debug("Switching to controller: {}".format(
         app.current_controller))
     juju.switch(app.current_controller)
-    app.controllers['deploy'].render(app.current_controller)
+    controllers.use('deploy').render(app.current_controller)
 
 
 def render(cloud=None, bootstrap=None):

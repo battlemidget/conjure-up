@@ -1,68 +1,24 @@
 """ Application entrypoint
 """
 
+from configobj import ConfigObj
+from conjure import __version__ as VERSION
+from conjure import async
+from conjure import controllers
+from conjure import juju
+from conjure import utils
+from conjure.app_config import app
+from conjure.download import download, get_remote_url
+from conjure.log import setup_logging
+from conjure.ui import ConjureUI
 from ubuntui.ev import EventLoop
 from ubuntui.palette import STYLES
-from conjure.ui import ConjureUI
-from conjure import juju
-from conjure import async
-from conjure import utils
-from conjure import __version__ as VERSION
-from conjure.download import download, get_remote_url
-from conjure import controllers
-from conjure.log import setup_logging
-from conjure.app_config import app
-from configobj import ConfigObj
-import json
-import sys
 import argparse
+import json
 import os
 import os.path as path
+import sys
 import uuid
-
-
-class Application:
-    def __init__(self, argv, spell, metadata):
-        """ init
-
-        Arguments:
-        argv: Options passed in from cli
-        metadata: path to solutions metadata.json
-        """
-        app.argv = argv
-        app.log = setup_logging("conjure-up/{}".format(spell),
-                                argv.debug)
-        if hasattr(argv, 'cloud'):
-            app.headless = True
-        app.session_id = os.getenv('CONJURE_TEST_SESSION_ID',
-                                   '{}/{}'.format(
-                                       spell,
-                                       str(uuid.uuid4())))
-        app.config = {'metadata': metadata,
-                      'spell': spell}
-        app.ui = ConjureUI()
-
-    def unhandled_input(self, key):
-        if key in ['q', 'Q']:
-            async.shutdown()
-            EventLoop.exit(0)
-
-    def _start(self, *args, **kwargs):
-        """ Initially load cloud selection screen
-        """
-        if app.complete:
-            controllers.use('finish').render(bundle=None)
-        else:
-            controllers.use('clouds').render()
-
-    def start(self):
-        if app.headless:
-            self._start()
-        else:
-            EventLoop.build_loop(app.ui, STYLES,
-                                 unhandled_input=self.unhandled_input)
-            EventLoop.set_alarm_in(0.05, self._start)
-            EventLoop.run()
 
 
 def parse_options(argv):
@@ -85,19 +41,24 @@ def parse_options(argv):
     return parser.parse_args(argv)
 
 
-def main():
-    opts = parse_options(sys.argv[1:])
-    if "/" in opts.spell:
-        spell = opts.spell.split("/")[-1]
+def unhandled_input(key):
+    if key in ['q', 'Q']:
+        async.shutdown()
+        EventLoop.exit(0)
+
+
+def _start(*args, **kwargs):
+    """ Initially load cloud selection screen
+    """
+    if app.argv.status_only:
+        controllers.use('finish').render(bundle=None)
     else:
-        spell = opts.spell
+        controllers.use('clouds').render()
 
-    if os.geteuid() == 0:
-        utils.info("")
-        utils.info("This should _not_ be run as root or with sudo.")
-        utils.info("")
-        sys.exit(1)
 
+def has_valid_juju():
+    """ Checks for valid Juju version
+    """
     try:
         docs_url = "https://jujucharms.com/docs/stable/getting-started"
         juju_version = juju.version()
@@ -112,11 +73,39 @@ def main():
         utils.warning(e)
         sys.exit(1)
 
+
+def main():
+    opts = parse_options(sys.argv[1:])
+    if "/" in opts.spell:
+        spell = opts.spell.split("/")[-1]
+    else:
+        spell = opts.spell
+
+    if os.geteuid() == 0:
+        utils.info("")
+        utils.info("This should _not_ be run as root or with sudo.")
+        utils.info("")
+        sys.exit(1)
+
+    has_valid_juju()
+
+    # Application Config
+    app.argv = opts
+    app.log = setup_logging("conjure-up/{}".format(spell),
+                            opts.debug)
+    app.session_id = os.getenv('CONJURE_TEST_SESSION_ID',
+                               '{}/{}'.format(
+                                   spell,
+                                   str(uuid.uuid4())))
+
     global_conf_file = '/etc/conjure-up.conf'
     if not os.path.exists(global_conf_file):
         global_conf_file = os.path.join(
             os.path.dirname(sys.argv[0]), 'etc', 'conjure-up.conf')
     global_conf = ConfigObj(global_conf_file)
+
+    # Bind UI
+    app.ui = ConjureUI()
 
     metadata = {'spell-dir': None}
     if spell in global_conf['curated_spells']:
@@ -152,5 +141,18 @@ def main():
             with open(metadata_path) as fp:
                 metadata.update(json.load(fp))
 
-    app = Application(opts, spell, metadata)
-    app.start()
+    if hasattr(app.argv, 'cloud'):
+        app.headless = True
+        app.ui = None
+
+    app.config = {'metadata': metadata,
+                  'spell': spell}
+    app.env = os.environ.copy()
+
+    if app.headless:
+        _start()
+    else:
+        EventLoop.build_loop(app.ui, STYLES,
+                             unhandled_input=unhandled_input)
+        EventLoop.set_alarm_in(0.05, _start)
+        EventLoop.run()

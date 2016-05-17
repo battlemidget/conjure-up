@@ -1,6 +1,7 @@
 from conjure.ui.views.cloud import CloudView
 from conjure import juju
 from conjure import utils
+from conjure import controllers
 from conjure.app_config import app
 
 
@@ -28,7 +29,7 @@ def finish(cloud=None, create_cloud=False):
     create_cloud: True/False, if true display create cloud interface
     """
     if create_cloud:
-        return app.controllers.use('newcloud').render(cloud)
+        return controllers.use('newcloud').render(cloud)
 
     utils.pollinate(app.session_id, 'CS')
 

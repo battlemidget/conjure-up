@@ -1,6 +1,7 @@
 from conjure.api.models import model_info
 from conjure import utils
 from conjure.app_config import app
+from conjure import controllers
 
 
 def finish():
@@ -10,7 +11,7 @@ def finish():
     back: if true returns to previous controller
     """
     utils.pollinate(app.session_id, 'PC')
-    app.controllers.use('deploysummary').render()
+    controllers.use('deploysummary').render()
 
 
 def render(model):
