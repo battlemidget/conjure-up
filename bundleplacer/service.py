@@ -15,7 +15,6 @@
 
 import logging
 import yaml
-import json
 
 from bundleplacer.charmstore_api import CharmStoreID
 
@@ -72,8 +71,6 @@ class Service:
         }
 
     def as_deployargs(self):
-        import q
-        q.q(self.resources)
         rd = {"charm-url": self.csid.as_str(),
               "application": self.service_name,
               "num-units": self.num_units,
