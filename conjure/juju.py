@@ -7,7 +7,7 @@ import sys
 from subprocess import (run, PIPE, DEVNULL, CalledProcessError, Popen,
                         TimeoutExpired)
 import yaml
-
+import json
 from bundleplacer.charmstore_api import CharmStoreID
 
 from conjure import async
@@ -346,6 +346,26 @@ def deploy_service(service, msg_cb=None, exc_cb=None):
             futures.wait([mc.metadata_future])
             info = mc.get_charm_info(id_no_rev, lambda _: None)
             service.csid = CharmStoreID(info["Id"])
+
+        # Add charm to Juju
+        this.CLIENT.Client(request="AddCharm",
+                           params={"url": service.csid.as_str()})
+
+        # We must load any resources prior to deploying
+        resources = this.CLIENT.resources(
+            request="ListResources",
+            params={"Tag": service.csid.as_str_without_rev()})
+        if resources:
+            app.log.debug("Resources: {}".format(resources))
+            params = {"ApplicationID": service.csid.name,
+                      "CharmID": service.csid.as_str(),
+                      "Resources": resources}
+            app.log.debug("Adding pending resources: {}".format(params))
+            resource_ids = this.CLIENT.resources(
+                request="AddPendingResources",
+                params=params)
+            app.log.debug("Pending resources IDs: {}".format(resource_ids))
+            service.resources = resource_ids
         params = {"applications": [service.as_deployargs()]}
 
         app.log.debug("Deploying {}: {}".format(service, params))
@@ -354,8 +374,6 @@ def deploy_service(service, msg_cb=None, exc_cb=None):
             service.service_name)
         if msg_cb:
             msg_cb("{}".format(deploy_message))
-        this.CLIENT.Client(request="AddCharm",
-                           params={"url": service.csid.as_str()})
         this.CLIENT.Application(request="Deploy",
                                 params=params)
         if msg_cb:

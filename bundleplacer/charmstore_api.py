@@ -279,6 +279,12 @@ class MetadataController:
             return {}
         return self.charm_info[charm_name]['Meta']['charm-config']['Options']
 
+    def get_resources(self, charm_name):
+        if not self.loaded():
+            return {}
+        charm_metadata = self.charm_info[charm_name]['Meta']['charm-metadata']
+        return charm_metadata.get('Resources', {})
+
     def handle_search_error(self, e):
         self.error_cb(e)
 
