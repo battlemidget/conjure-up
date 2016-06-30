@@ -352,20 +352,22 @@ def deploy_service(service, msg_cb=None, exc_cb=None):
                            params={"url": service.csid.as_str()})
 
         # We must load any resources prior to deploying
-        resources = this.CLIENT.resources(
-            request="ListResources",
-            params={"Tag": service.csid.as_str_without_rev()})
+        resources = app.metadata_controller.get_resources(
+            service.csid.as_str_without_rev())
+        app.log.debug("Resources: {}".format(resources))
         if resources:
-            app.log.debug("Resources: {}".format(resources))
-            params = {"ApplicationID": service.csid.name,
-                      "CharmID": service.csid.as_str(),
-                      "Resources": resources}
+            params = {"tag": "application-{}".format(service.csid.name),
+                      "url": service.csid.as_str(),
+                      "resources": resources}
             app.log.debug("Adding pending resources: {}".format(params))
             resource_ids = this.CLIENT.resources(
                 request="AddPendingResources",
                 params=params)
             app.log.debug("Pending resources IDs: {}".format(resource_ids))
-            service.resources = resource_ids
+            application_to_resource_map = {}
+            for idx, resource in enumerate(resources):
+                application_to_resource_map[resource['Name']] = resource_ids['PendingIDs'][idx]
+            service.resources = application_to_resource_map
         params = {"applications": [service.as_deployargs()]}
 
         app.log.debug("Deploying {}: {}".format(service, params))
