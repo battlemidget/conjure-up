@@ -57,9 +57,6 @@ class StepsController:
         step_model: step_model returned from widget
         done: if True continues on to the summary view
         """
-        if done:
-            EventLoop.remove_alarms()
-            return controllers.use('summary').render(self.results)
 
         # Set next button focus here now that the step is complete.
         self.view.steps.popleft()
@@ -71,9 +68,8 @@ class StepsController:
             app.log.debug(
                 "End of step list setting the view "
                 "summary button in focus.")
-            index = self.view.current_summary_button_index
-            app.log.debug("Next focused button: {}".format(index))
-            self.view.step_pile.focus_position = index
+            EventLoop.remove_alarms()
+            return controllers.use('summary').render(self.results)
 
         future = async.submit(partial(common.do_step,
                                       step_model,
@@ -146,7 +142,8 @@ class StepsController:
             excerpt="Please finish the installation by configuring your "
             "application with these steps.")
         app.ui.set_body(self.view)
-        app.ui.set_footer('')
+        app.ui.set_footer('Press (Q) to quit to shell, actions not executed '
+                          'will need to be run from command line.')
         self.update()
 
 
